@@ -44,7 +44,6 @@ def get_coordinate_input(timeout: float = 10) -> Tuple[str, str]:
 def get_single_input(timeout: float = 10) -> str:
     # Obtain audio from the microphone
     r = sr.Recognizer()
-
     r.pause_threshold = 1.3
 
     with sr.Microphone() as source:
@@ -63,7 +62,6 @@ def get_single_input(timeout: float = 10) -> str:
         print(
             f"Could not request results from Google Speech Recognition service; {e}")
         recognized = ""
-
     return recognized
 
 

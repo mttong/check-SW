@@ -7,6 +7,7 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">=3.10"
+
 dependencies = [
     "pyaudio (>=0.2.12)",
     "speechrecognition (>=3.14.0)"
@@ -16,3 +17,4 @@ dependencies = [
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
