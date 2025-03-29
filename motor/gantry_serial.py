@@ -89,152 +89,152 @@ class Gantry:
         finally:
             self.esp.close()
 
-    def _validate_cmd_type(command_typeself, cmd_type:int):
-        if cmd_type < 0 or cmd_type > 4:
+    def _validate_axis_type(self, axis_type:int):
+        if axis_type < 0 or axis_type > 4:
             raise ValueError("Invalid command type")
 
-    def cmd_home(self, command_type:int):
-        self._validate_cmd_type(command_type)
-        ret, = self._send_command(constants.CMD_HOME, command_type)
+    def cmd_home(self, axis_type:int):
+        self._validate_cmd_type(axis_type)
+        ret, = self._send_command(constants.CMD_HOME, axis_type)
         if ret:
             raise GantryError(ret)
 
-    def cmd_stop(self, command_type:int):
-        self._validate_cmd_type(command_type)
-        ret, = self._send_command(constants.CMD_STOP, command_type)
+    def cmd_stop(self, axis_type:int):
+        self._validate_cmd_type(axis_type)
+        ret, = self._send_command(constants.CMD_STOP, axis_type)
         if ret:
             raise GantryError(ret)
 
-    def cmd_is_homing(self, command_type:int) -> bool:
-        self._validate_cmd_type(command_type)
-        ret, is_homing = self._send_command(constants.CMD_IS_HOMING, command_type)
+    def cmd_is_homing(self, axis_type:int) -> bool:
+        self._validate_cmd_type(axis_type)
+        ret, is_homing = self._send_command(constants.CMD_IS_HOMING, axis_type)
         if ret:
             raise GantryError(ret)
         return bool(is_homing)
 
-    def cmd_is_moving(self, command_type:int) -> bool:
-        self._validate_cmd_type(command_type)
-        ret, is_moving = self._send_command(constants.CMD_IS_MOVING, command_type)
-        self._send_command(constants.CMD_IS_MOVING, command_type)
+    def cmd_is_moving(self, axis_type:int) -> bool:
+        self._validate_cmd_type(axis_type)
+        ret, is_moving = self._send_command(constants.CMD_IS_MOVING, axis_type)
+        self._send_command(constants.CMD_IS_MOVING, axis_type)
         if ret:
             raise GantryError(ret)
         return bool(is_moving)
 
-    def cmd_get_posn(self, command_type:int) -> float:
-        self._validate_cmd_type(command_type)
-        ret, posn = self._send_command(constants.CMD_GET_POSN, command_type)
+    def cmd_get_posn(self, axis_type:int) -> float:
+        self._validate_cmd_type(axis_type)
+        ret, posn = self._send_command(constants.CMD_GET_POSN, axis_type)
         if ret:
             raise GantryError(ret)
         return posn
 
-    def cmd_get_speed(self, command_type:int) -> float:
-        self._validate_cmd_type(command_type)
-        ret, speed = self._send_command(constants.CMD_GET_SPEED, command_type)
+    def cmd_get_speed(self, axis_type:int) -> float:
+        self._validate_cmd_type(axis_type)
+        ret, speed = self._send_command(constants.CMD_GET_SPEED, axis_type)
         if ret:
             raise GantryError(ret)
         return speed
 
-    def cmd_get_default_speed(self, command_type:int) -> float:
-        self._validate_cmd_type(command_type)
-        ret, speed = self._send_command(constants.CMD_GET_DEFAULT_SPEED, command_type)
+    def cmd_get_default_speed(self, axis_type:int) -> float:
+        self._validate_cmd_type(axis_type)
+        ret, speed = self._send_command(constants.CMD_GET_DEFAULT_SPEED, axis_type)
         if ret:
             raise GantryError(ret)
         return speed
 
-    def cmd_get_slow_speed(self, command_type:int) -> float:
-        self._validate_cmd_type(command_type)
-        ret, speed = self._send_command(constants.CMD_GET_SLOW_SPEED, command_type)
+    def cmd_get_slow_speed(self, axis_type:int) -> float:
+        self._validate_cmd_type(axis_type)
+        ret, speed = self._send_command(constants.CMD_GET_SLOW_SPEED, axis_type)
         if ret:
             raise GantryError(ret)
         return speed
 
-    def cmd_get_fine_speed(self, command_type:int) -> float:
-        self._validate_cmd_type(command_type)
-        ret, speed = self._send_command(constants.CMD_GET_FINE_SPEED, command_type)
+    def cmd_get_fine_speed(self, axis_type:int) -> float:
+        self._validate_cmd_type(axis_type)
+        ret, speed = self._send_command(constants.CMD_GET_FINE_SPEED, axis_type)
         if ret:
             raise GantryError(ret)
         return speed
 
-    def cmd_get_max_speed(self, command_type:int) -> float:
-        self._validate_cmd_type(command_type)
-        ret, speed = self._send_command(constants.CMD_GET_MAX_SPEED, command_type)
+    def cmd_get_max_speed(self, axis_type:int) -> float:
+        self._validate_cmd_type(axis_type)
+        ret, speed = self._send_command(constants.CMD_GET_MAX_SPEED, axis_type)
         if ret:
             raise GantryError(ret)
         return speed
 
-    def cmd_get_accel(self, command_type:int) -> float:
-        self._validate_cmd_type(command_type)
-        ret, accel = self._send_command(constants.CMD_GET_ACCEL, command_type)
+    def cmd_get_accel(self, axis_type:int) -> float:
+        self._validate_cmd_type(axis_type)
+        ret, accel = self._send_command(constants.CMD_GET_ACCEL, axis_type)
         if ret:
             raise GantryError(ret)
         return accel
 
-    def cmd_get_limit(self, command_type:int) -> bool:
-        self._validate_cmd_type(command_type)
-        ret, lim = self._send_command(constants.CMD_GET_LIMIT, command_type)
+    def cmd_get_limit(self, axis_type:int) -> bool:
+        self._validate_cmd_type(axis_type)
+        ret, lim = self._send_command(constants.CMD_GET_LIMIT, axis_type)
         if ret:
             raise GantryError(ret)
         return bool(lim)
 
-    def cmd_get_dist_to_go(self, command_type:int) -> float:
-        self._validate_cmd_type(command_type)
-        ret, dist = self._send_command(constants.CMD_GET_DIST_TO_GO, command_type)
+    def cmd_get_dist_to_go(self, axis_type:int) -> float:
+        self._validate_cmd_type(axis_type)
+        ret, dist = self._send_command(constants.CMD_GET_DIST_TO_GO, axis_type)
         if ret:
             raise GantryError(ret)
         return dist
 
-    def cmd_get_target_posn(self, command_type:int) -> float:
-        self._validate_cmd_type(command_type)
-        ret, target_posn = self._send_command(constants.CMD_GET_TARGET_POSN, command_type)
+    def cmd_get_target_posn(self, axis_type:int) -> float:
+        self._validate_cmd_type(axis_type)
+        ret, target_posn = self._send_command(constants.CMD_GET_TARGET_POSN, axis_type)
         if ret:
             raise GantryError(ret)
         return target_posn
 
-    def cmd_move_absolute(self, command_type:int, posn:float):
-        self._validate_cmd_type(command_type)
-        ret, = self._send_command(constants.CMD_MOVE_ABSOLUTE, command_type, posn)
+    def cmd_move_absolute(self, axis_type:int, posn:float):
+        self._validate_cmd_type(axis_type)
+        ret, = self._send_command(constants.CMD_MOVE_ABSOLUTE, axis_type, posn)
         if ret:
             raise GantryError(ret)
 
-    def cmd_move_relative(self, command_type:int, dist:float):
-        self._validate_cmd_type(command_type)
-        ret, = self._send_command(constants.CMD_MOVE_RELATIVE, command_type, dist)
+    def cmd_move_relative(self, axis_type:int, dist:float):
+        self._validate_cmd_type(axis_type)
+        ret, = self._send_command(constants.CMD_MOVE_RELATIVE, axis_type, dist)
         if ret:
             raise GantryError(ret)
 
-    def cmd_set_posn(self, command_type:int, posn:float):
-        self._validate_cmd_type(command_type)
-        ret, = self._send_command(constants.CMD_SET_POSN, command_type, posn)
+    def cmd_set_posn(self, axis_type:int, posn:float):
+        self._validate_cmd_type(axis_type)
+        ret, = self._send_command(constants.CMD_SET_POSN, axis_type, posn)
         if ret:
             raise GantryError(ret)
 
-    def cmd_set_max_speed(self, command_type:int, speed:float):
-        self._validate_cmd_type(command_type)
-        ret, = self._send_command(constants.CMD_SET_MAX_SPEED, command_type, speed)
+    def cmd_set_max_speed(self, axis_type:int, speed:float):
+        self._validate_cmd_type(axis_type)
+        ret, = self._send_command(constants.CMD_SET_MAX_SPEED, axis_type, speed)
         if ret:
             raise GantryError(ret)
 
-    def cmd_set_default_speed(self, command_type:int, speed:float):
-        self._validate_cmd_type(command_type)
-        ret, = self._send_command(constants.CMD_SET_DEFAULT_SPEED, command_type, speed)
+    def cmd_set_default_speed(self, axis_type:int, speed:float):
+        self._validate_cmd_type(axis_type)
+        ret, = self._send_command(constants.CMD_SET_DEFAULT_SPEED, axis_type, speed)
         if ret:
             raise GantryError(ret)
 
-    def cmd_set_default_speed(self, command_type:int, speed:float):
-        self._validate_cmd_type(command_type)
-        ret, = self._send_command(constants.CMD_SET_DEFAULT_SPEED, command_type, speed)
+    def cmd_set_default_speed(self, axis_type:int, speed:float):
+        self._validate_cmd_type(axis_type)
+        ret, = self._send_command(constants.CMD_SET_DEFAULT_SPEED, axis_type, speed)
         if ret:
             raise GantryError(ret)
 
-    def cmd_set_fine_speed(self, command_type:int, speed:float):
-        self._validate_cmd_type(command_type)
-        ret, = self._send_command(constants.CMD_SET_FINE_SPEED, command_type, speed)
+    def cmd_set_fine_speed(self, axis_type:int, speed:float):
+        self._validate_cmd_type(axis_type)
+        ret, = self._send_command(constants.CMD_SET_FINE_SPEED, axis_type, speed)
         if ret:
             raise GantryError(ret)
 
-    def cmd_set_accel(self, command_type:int, accel:float):
-        self._validate_cmd_type(command_type)
-        ret, = self._send_command(constants.CMD_SET_ACCEL, command_type, accel)
+    def cmd_set_accel(self, axis_type:int, accel:float):
+        self._validate_cmd_type(axis_type)
+        ret, = self._send_command(constants.CMD_SET_ACCEL, axis_type, accel)
         if ret:
             raise GantryError(ret)
 
