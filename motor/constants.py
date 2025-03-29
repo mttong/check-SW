@@ -1,6 +1,7 @@
 # ESP32's Vendor ID and Product ID
 ESP_HID_VID = "VID:PID=10C4:EA60"
 ESP_BAUD = 115200
+READ_TIMEOUT = 2000000000
 
 # Command error codes
 RET_OK = 0

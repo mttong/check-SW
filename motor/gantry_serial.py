@@ -33,33 +33,24 @@ class Gantry:
         :param str port: The port of the ESP32. If not given, automatically found
         :raises RuntimeError: When the port is automatically searched and not found
         """
-        if port:
-            try:
-                self.esp = Serial(port, self.baud)
-                time.sleep(5)
-                while self.esp.in_waiting > 0:
-                    print(self.esp.readline())
-            except:
-                raise GantryError(constants.RET_ERROR)
-            finally:
-                if self.esp.is_open:
-                    self.esp.close()
-            return
-        ports = serial.tools.list_ports.comports()
-        for p, _, hwid in sorted(ports):
-            if constants.ESP_HID_VID in hwid:
-                try:
-                    self.esp = Serial(p, self.baud)
-                    time.sleep(5)
-                    while self.esp.in_waiting > 0:
-                        print(self.esp.readline())
-                except:
-                    raise GantryError(constants.RET_ERROR)
-                finally:
-                    if self.esp.is_open:
-                        self.esp.close()
-                return
-        raise RuntimeError("ESP32 port not found")
+        selected_port = port
+        if selected_port is None:
+            ports = serial.tools.list_ports.comports()
+            for p, _, hwid in sorted(ports):
+                if constants.ESP_HID_VID in hwid:
+                    selected_port = p
+        if selected_port is None:
+            raise RuntimeError("ESP32 port not found")
+        try:
+            self.esp = Serial(p, self.baud, timeout=3)
+            time.sleep(5)
+            while self.esp.in_waiting > 0:
+                print(self.esp.readline().decode().strip())
+        except:
+            raise GantryError(constants.RET_ERROR)
+        finally:
+            if self.esp.is_open:
+                self.esp.close()
 
     def _get_command_bytes(self, cmd:int, type: int, params) -> bytearray:
         cmd_b = cmd.to_bytes(1, byteorder='big')
@@ -71,6 +62,8 @@ class Gantry:
         return command_bytes
     
     def _decode_response(self, resp: bytearray) -> list[int]:
+        if not resp:
+            return [constants.RET_ERROR]
         ret_list = [int(resp[0])]
         i = 1
         while resp[i] != constants.RET_ENDLINE:
@@ -86,8 +79,10 @@ class Gantry:
             if not self.esp.is_open:
                 self.esp.open()
             self.esp.write(cmd_bytes)
+            current = time.time_ns()
             while self.esp.in_waiting == 0:
-                pass
+                if(time.time_ns() - current > constants.READ_TIMEOUT):
+                    break
             return self._decode_response(self.esp.readline())
         except:
             raise RuntimeError("Error during ESP communication")
@@ -251,14 +246,12 @@ class Gantry:
         if ret:
             raise GantryError(ret)
 
-    def cmd_move_xz(self, command_type:int, x:float, z:float):
-        self._validate_cmd_type(command_type)
-        ret, = self._send_command(constants.CMD_SET_ACCEL, command_type, x, z)
+    def cmd_move_xz(self, x:float, z:float):
+        ret, = self._send_command(constants.CMD_MOVE_XZ, constants.GANTRY, x, z)
         if ret:
             raise GantryError(ret)
 
-    def cmd_move_xyz(self, command_type:int, x:float, y:float, z:float):
-        self._validate_cmd_type(command_type)
-        ret, = self._send_command(constants.CMD_SET_ACCEL, command_type, x, y, z)
+    def cmd_move_xyz(self, x:float, y:float, z:float):
+        ret, = self._send_command(constants.CMD_MOVE_XYZ, constants.GANTRY, x, y, z)
         if ret:
             raise GantryError(ret)
