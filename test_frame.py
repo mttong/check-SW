@@ -32,22 +32,39 @@ def detect_apriltags(img, brightness = 0.85):
 	return results
 	
 def calibrate_board_left(results):
-	left_boundary_x = np.array([])
-	left_boundary_y = np.array([])
+	min_left_boundary_x = np.array([])
+	min_left_boundary_y = np.array([])
+	max_left_boundary_x = np.array([])
+	max_left_boundary_y = np.array([])
+	
 	for tag in results:
 		#check if tag is black
 		if tag.tag_id % 2 == 0 and tag.tag_id != 2:
+			
 			min_corner_x = 2048.0
 			min_corner = []
+			max_corner_x = 0.0
+			max_corner = []
+			
 			for corner in tag.corners:
 				if corner[0] < min_corner_x:
 					min_corner_x = corner[0]
 					min_corner = corner
-			left_boundary_x = np.append(left_boundary_x, min_corner_x)
-			left_boundary_y = np.append(left_boundary_y, min_corner[1])
-			print(f"Tag: {tag.tag_id}, Left Most Corner: {min_corner}")
+				if corner[0] > max_corner_x:
+					max_corner_x = corner[0]
+					max_corner = corner
+				
+			min_left_boundary_x = np.append(min_left_boundary_x, min_corner_x)
+			min_left_boundary_y = np.append(min_left_boundary_y, min_corner[1])
+			max_left_boundary_x = np.append(max_left_boundary_x, max_corner_x)
+			max_left_boundary_y = np.append(max_left_boundary_y, max_corner[1])
 			
-	m, b = np.polyfit(left_boundary_x,left_boundary_y,1)
+	add_polyfit_lines(min_left_boundary_x, min_left_boundary_y)
+	add_polyfit_lines(max_left_boundary_x, max_left_boundary_y)
+			
+def add_polyfit_lines(boundary_x, boundary_y):
+			
+	m, b = np.polyfit(boundary_x,boundary_y,1)
 	
 	img = cv2.imread("/home/chess/Documents/check-SW/image.jpg")
 	num_pixels_y = img.shape[1]
@@ -55,8 +72,8 @@ def calibrate_board_left(results):
 	x1, y1 = 0, int(b)
 	x2, y2 = num_pixels_y, int(m * num_pixels_y + b)
 	cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0) ,5)
-	for i in range(len(left_boundary_x)):
-		cv2.circle(img, (int(left_boundary_x[i]), int(left_boundary_y[i])), 10, (0, 0, 255), -1)
+	for i in range(len(boundary_x)):
+		cv2.circle(img, (int(boundary_x[i]), int(boundary_y[i])), 10, (0, 0, 255), -1)
 	
 	cv2.imwrite("/home/chess/Documents/check-SW/image.jpg", img)
 	
