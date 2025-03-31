@@ -3,6 +3,8 @@ from typing import Tuple
 import speech_recognition as sr
 import pyttsx3
 from word2number import w2n
+import serial
+import time
 
 # have speaker ask for first coordinate, then detect for second one
 # needs to recognize words, roman numerals, and time
@@ -19,22 +21,29 @@ class Listener:
 
     def get_coordinate_input(self, timeout: float = 10) -> Tuple[str, str]:
         """Obtain coordinates from speech input and announce the movement."""
-        recognized = self.get_single_input(timeout)
-        print("before", recognized)
 
-        # Process the recognized speech and convert number words to digits
-        new_recognized = ''
-        for word in recognized.split():
-            try:
-                new_recognized += str(w2n.word_to_num(word)) + " "
-            except:
-                new_recognized += word + " "
+        while True:
+            recognized = self.get_single_input(timeout)
 
-        print("recognized:", new_recognized)
+            print("before", recognized)
 
-        # Extract coordinates using regex (e.g., A1, B2, etc.)
-        from_coord, to_coord = re.findall(
-            r"[a-zA-Z]+\s?\d", new_recognized)[:2]
+            # Process the recognized speech and convert number words to digits
+            new_recognized = ''
+            for word in recognized.split():
+                try:
+                    new_recognized += str(w2n.word_to_num(word)) + " "
+                except:
+                    new_recognized += word + " "
+
+            print("recognized:", new_recognized)
+
+            # Extract coordinates using regex (e.g., A1, B2, etc.)
+            coords = re.findall(r"[a-zA-Z]+\s?\d", new_recognized)
+
+            if not len(coords) < 2:
+                break
+
+        from_coord, to_coord = coords[:2]
 
         print("from", from_coord, to_coord)
 
@@ -78,6 +87,14 @@ class Listener:
         self.engine.say(movement_message)
         # Wait until the speech is finished
         self.engine.runAndWait()
+
+    def communicate_esp(self, from_coord: str, to_coord: str):
+        ser = serial.Serial('PORT', 115200)
+        time.sleep(2)
+
+        message = f"start: {from_coord}, end: {to_coord}\n"
+        ser.write(message.encode())
+        ser.close()
 
 
 if __name__ == "__main__":
