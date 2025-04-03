@@ -49,3 +49,11 @@ CMD_MOVE_XZ = 64
 
 # 5 parameter commands
 CMD_MOVE_XYZ = 96
+
+# Board Constants
+SQUARE_ONE = (19, 186)
+SQUARE_SIZE = 38.1
+GAP_SIZE = 19.05
+STRING_OF_LETTERS = "JIHGFEDCBALK"
+DICT_OF_PIECE_HEIGHTS = {"p": 0, "k": 7.747, "q": 4.318, "b": 3.3528, "r": 3.8608, "n": 4.6228}
+PAWN_HEIGHT = 161

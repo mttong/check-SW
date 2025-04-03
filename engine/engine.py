@@ -1,7 +1,8 @@
-PATH = "C:\\Users\\aidke\\Downloads\\stockfish-windows-x86-64-sse41-popcnt\\stockfish\\stockfish-windows-x86-64-sse41-popcnt.exe"
-
 from stockfish import Stockfish
+PATH = "/home/chess/Desktop/stock/Stockfish-sf_15/src/stockfish"
+
 __all__ = ["Engine"]
+
 
 class Engine:
 
@@ -24,7 +25,8 @@ class Engine:
             move = self.stockfish.get_best_move_time(500)
         self.stockfish.make_moves_from_current_position([move])
         if not self.black:
-            self.stockfish.make_moves_from_current_position([self.stockfish.get_best_move_time(500)])
+            self.stockfish.make_moves_from_current_position(
+                [self.stockfish.get_best_move_time(500)])
         else:
             self.turn = not self.turn
 
@@ -37,10 +39,10 @@ class Engine:
             move = self.stockfish.get_best_move_time(500)
         self.stockfish.make_moves_from_current_position([move])
         if not self.white:
-            self.stockfish.make_moves_from_current_position([self.stockfish.get_best_move_time(500)])
+            self.stockfish.make_moves_from_current_position(
+                [self.stockfish.get_best_move_time(500)])
         else:
             self.turn = not self.turn
-
 
     # for i in range(20):
     #     stockfish.make_moves_from_current_position([stockfish.get_best_move_time(500)])

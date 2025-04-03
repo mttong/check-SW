@@ -1,7 +1,7 @@
 from serial import Serial
 import serial.tools.list_ports
 import struct
-import constants
+from motor import constants
 import time
 
 class GantryError(Exception):
@@ -255,3 +255,32 @@ class Gantry:
         ret, = self._send_command(constants.CMD_MOVE_XYZ, constants.GANTRY, x, y, z)
         if ret:
             raise GantryError(ret)
+            
+    def chess_to_mm(self, coord:str, piece:str):
+        letter = coord[0]
+        number = int(coord[1])
+        
+        letter_index = constants.STRING_OF_LETTERS.index(letter)
+        
+        if letter_index > 1:
+            coord_letter = (letter_index * constants.SQUARE_SIZE) + constants.GAP_SIZE
+        elif letter_index > 9:
+            coord_letter = (letter_index * constants.SQUARE_SIZE) + (constants.GAP_SIZE * 2)
+        else:
+            coord_letter = (letter_index * constants.SQUARE_SIZE)
+    
+        print("coord letter", coord_letter)
+        coord_number = (number - 1) * constants.SQUARE_SIZE
+        print("coord num", coord_number)
+        first, second = constants.SQUARE_ONE
+        
+        piece_height = constants.PAWN_HEIGHT - constants.DICT_OF_PIECE_HEIGHTS[piece.lower()]
+        
+        return coord_letter + first, coord_number + second, piece_height
+
+            
+#gant = Gantry()
+#gant.set_esp_port()
+#gant.cmd_move_xyz(20,20,20)
+#gant.cmd_home(constants.GANTRY)
+
