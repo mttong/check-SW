@@ -9,8 +9,8 @@ import spidev as SPI
 from PIL import Image, ImageDraw, ImageFont
 
 sys.path.append("..")
-#from lib import LCD_2inch
-from LCD_Module_RPI_code.RaspberryPi.python.lib import LCD_2inch
+from lib import LCD_2inch
+# from LCD_Module_RPI_code.RaspberryPi.python.lib import LCD_2inch
 
 
 class LCD:
@@ -73,30 +73,27 @@ class LCD:
             draw = ImageDraw.Draw(image)
             draw.text((45, 5), f"{player}'s Turn", fill="BLACK", font=self.font)
             #draw.text((150, 100), time_str, fill="BLACK", font=self.font)
-            draw.text((130, 70), "Speak into", fill="BLUE", font=self.font2)
-            draw.text((130, 110), "the mic!", fill="BLUE", font=self.font2)
+            draw.text((130, 70), "Speak into", fill="BLACK", font=self.font2)
+            draw.text((150, 110), "the mic!", fill="BLACK", font=self.font2)
             
             self._show_image(image.rotate(180))
             time.sleep(1)
 
-    def confirm_move(self, move="A1 to A3"):
-        """Ask for move confirmation."""
-        image = Image.new("RGB", (self.disp1.height, self.disp1.width), "WHITE")
-        draw = ImageDraw.Draw(image)
-
-        for _ in range(5):
-            draw.text((20, 5), f"Confirm {move}?", fill="BLACK", font=self.font)
-            self._show_image(image)
-            time.sleep(1)
-
-    def display_move(self, move="A1 to A3"):
+    def display_move(self, start, end):
         """Display the move made and show an image of the black king."""
-        image = Image.new("RGB", (self.disp1.height, self.disp1.width), "WHITE")
+        
+        background = Image.open("/home/chess/Downloads/checkered.jpg").resize((self.disp1.height, self.disp1.width))
+        
+        image = background.copy()
         draw = ImageDraw.Draw(image)
-        draw.text((5, 10), f"Moved {move}", fill="BLACK", font=self.font)
+        #image = Image.new("RGB", (self.disp1.height, self.disp1.width), "WHITE")
+        #draw = ImageDraw.Draw(image)
+        #draw.text((5, 10), f"Moved {start} to {end}", fill="BLACK", font=self.font)
+        
+        self._show_image(image)
 
-        black_king = Image.open('/home/chess/Downloads/BlackKing.jpeg')
-        self._show_image(black_king)
+        #black_king = Image.open('/home/chess/Downloads/BlackKing.jpeg')
+        #self._show_image(black_king)
 
     def display_image(self, image_path):
         """Display a custom image on both LCDs."""
@@ -108,8 +105,8 @@ class LCD:
         try:
             self.display_ip_address()
             self.display_turn("Black", 5)
-            #self.confirm_move("A1 to A3")
-            self.display_move("A1 to A3")
+            while True:
+                self.display_move("A1", "A3")
         except IOError as e:
             logging.error(e)
         except KeyboardInterrupt:
