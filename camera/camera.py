@@ -134,6 +134,40 @@ def sort_row_tags(results, tag_id_num):
 
 	return sorted_tag3s
 
+def return_min_max_line_rows(results):
+	min_boundary = [np.array([]), np.array([])]
+	max_boundary = [np.array([]), np.array([])]
+
+	min_corner_y_value = 1944.0 #size of the image
+	max_corner_y_value = 0.0
+
+
+
+	for tag in results:
+		min_corner_y = min_corner_y_value
+		min_corner = []
+		max_corner_y = max_corner_y_value
+		max_corner = []
+		for corner in tag.corners:
+			if corner[1] < min_corner_y:
+				min_corner_y = corner[1]
+				min_corner = corner
+			if corner[1] > max_corner_y:
+				max_corner_y = corner[1]
+				max_corner = corner
+		min_boundary[1] = np.append(min_boundary[1], min_corner_y)
+		min_boundary[0] = np.append(min_boundary[0], min_corner[0])
+		max_boundary[1] = np.append(max_boundary[1], max_corner_y)
+		max_boundary[0] = np.append(max_boundary[0] , max_corner[0])	
+
+
+	m_min, b_min = np.polyfit(min_boundary[0], min_boundary[1],1)
+	m_max, b_max = np.polyfit(max_boundary[0], max_boundary[1],1)
+
+	add_polyfit_lines(m_min, b_min, min_boundary[0], min_boundary[1])
+	add_polyfit_lines(m_max, b_max, max_boundary[0], max_boundary[1])
+
+
 def return_row_lines(april_tag_results):
 	row_lines = {}
 	sorted_rows = {}
@@ -148,8 +182,9 @@ def return_row_lines(april_tag_results):
 	min_black_rook = sorted(sorted_rows[4], key=lambda tag: tag.center[1])[0]
 	min_white_rook = sorted(sorted_rows[5], key=lambda tag: tag.center[1])[0]
 	rows['A'] = [max_black_rook, max_white_rook]
-	rows['H'] = [max_black_rook, max_white_rook, sorted(sorted_rows[2], key=lambda tag: tag.center[1])[0], sorted(sorted_rows[3], key=lambda tag: tag.center[1])[0]]
+	rows['H'] = [min_black_rook, min_white_rook, sorted(sorted_rows[2], key=lambda tag: tag.center[1])[0], sorted(sorted_rows[3], key=lambda tag: tag.center[1])[0]]
 
+	return_min_max_line_rows(rows['H'])
 	#for letter in rows:
 		#get_row_tags(april_tag_results, letter)
 
