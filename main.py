@@ -24,6 +24,7 @@ def main():
     gantry.cmd_home(constants.GANTRY)
     
     while gantry.cmd_is_homing(constants.GANTRY):
+        lcd_display.motor_calibrating()
         time.sleep(0.1)
         
     print("done homing")
