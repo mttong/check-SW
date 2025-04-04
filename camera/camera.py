@@ -6,6 +6,7 @@ import pupil_apriltags as apriltag
 import numpy as np
 #import apriltag
 
+IMG_PATH = "/home/chess/Check/official-branch/camera/img.jpg"
 
 CHESS_PIECES = {
 	'black_pawn': 2,
@@ -18,8 +19,8 @@ CHESS_PIECES = {
 
 def take_image(camera):
 	time.sleep(0.5)
-	camera.capture_file("/home/chess/Documents/check-SW/image.jpg")
-	img = cv2.imread("/home/chess/Documents/check-SW/image.jpg")
+	camera.capture_file(IMG_PATH)
+	img = cv2.imread(IMG_PATH)
 	return img
 	
 def detect_apriltags(img, brightness = 0.75):
@@ -30,15 +31,6 @@ def detect_apriltags(img, brightness = 0.75):
 	detector = apriltag.Detector(families="tag36h11")
 	results = detector.detect(gray)
 	return results
-
-def convert_line_eq_to_image_coords(m, b, img_height):
-    # Convert slope (sign change due to y-axis flip)
-	m_image = -m
-    
-    # Convert intercept (adjust for y-axis flip and origin shift)
-	b_image = (img_height - b)
-    
-	return m_image, b_image
 	
 def return_col_min_max(min_corner_x_value, max_corner_x_value, tagcorners, 
 						min_left_boundary_x, min_left_boundary_y, 
@@ -65,18 +57,13 @@ def return_col_min_max(min_corner_x_value, max_corner_x_value, tagcorners,
 	return (min_left_boundary_x, min_left_boundary_y, 
 			max_left_boundary_x, max_left_boundary_y)
     
-def calibrate_board_columns(results, black_color = True):
-	min_left_boundary_x = np.array([])
-	min_left_boundary_y = np.array([])
-	max_left_boundary_x = np.array([])
-	max_left_boundary_y = np.array([])
+def calibrate_col_bounds(results, black_color = True):
+	min_boundary = [np.array([]), np.array([])]
+	max_boundary = [np.array([]), np.array([])]
+	min_pawn = [np.array([]), np.array([])]
+	max_pawn = [np.array([]), np.array([])] 
 	
-	min_p_x = np.array([])
-	min_p_y = np.array([])
-	max_p_x = np.array([])
-	max_p_y = np.array([])
-	
-	min_corner_x_value = 2592.0
+	min_corner_x_value = 2592.0 #size of the image
 	max_corner_x_value = 0.0
 		
 	pawn_tag_id = 2 if black_color else 3
@@ -85,34 +72,53 @@ def calibrate_board_columns(results, black_color = True):
 	for tag in results:
 		#check if tag is black
 		if tag.tag_id % 2 == int(check_black) and tag.tag_id != pawn_tag_id:
-			(min_left_boundary_x, min_left_boundary_y, 
-			max_left_boundary_x, max_left_boundary_y) = return_col_min_max(min_corner_x_value, 
+			(min_boundary[0], min_boundary[1], 
+			max_boundary[0], max_boundary[1]) = return_col_min_max(min_corner_x_value, 
 			max_corner_x_value, tag.corners, 
-			min_left_boundary_x, min_left_boundary_y, 
-			max_left_boundary_x, max_left_boundary_y)
+			min_boundary[0], min_boundary[1], 
+			max_boundary[0], max_boundary[1])
 			
 		if tag.tag_id == pawn_tag_id:
-			(min_p_x, min_p_y, 
-			max_p_x, max_p_y) = return_col_min_max(min_corner_x_value, 
+			(min_pawn[0], min_pawn[1], 
+			max_pawn[0], max_pawn[1]) = return_col_min_max(min_corner_x_value, 
 			max_corner_x_value, tag.corners, 
-			min_p_x, min_p_y, 
-			max_p_x, max_p_y)
+			min_pawn[0], min_pawn[1], 
+			max_pawn[0], max_pawn[1])
 
     
-	m_min, b_min = np.polyfit(min_left_boundary_x, min_left_boundary_y,1)
-	m_max, b_max = np.polyfit(max_left_boundary_x, max_left_boundary_y,1)
+	m_min, b_min = np.polyfit(min_boundary[0], min_boundary[1],1)
+	m_max, b_max = np.polyfit(max_boundary[0], max_boundary[1],1)
 	
-	pawn_m_min, pawn_b_min = np.polyfit(min_p_x, min_p_y,1)
-	pawn_m_max, pawn_b_max = np.polyfit(max_p_x, max_p_y,1)
+	pawn_m_min, pawn_b_min = np.polyfit(min_pawn[0], min_pawn[1],1)
+	pawn_m_max, pawn_b_max = np.polyfit(max_pawn[0], max_pawn[1],1)
 	
-	add_polyfit_lines(m_min, b_min, min_left_boundary_x, min_left_boundary_y)
-	add_polyfit_lines(m_max, b_max, max_left_boundary_x, max_left_boundary_y)
+	add_polyfit_lines(m_min, b_min, min_boundary[0], min_boundary[1])
+	add_polyfit_lines(m_max, b_max, max_boundary[0], max_boundary[1])
 	
-	return pawn_m_min, pawn_b_min, pawn_m_max, pawn_b_max
+	return [pawn_m_min, pawn_b_min], [pawn_m_max, pawn_b_max]
+	
 			
+def return_col_lines(final_apriltag_results):
+	#each line defined by m and b
+	col_lines = {}
+	col_lines["78"], col_lines["67"] = calibrate_col_bounds(final_apriltag_results, black_color = True)
+	col_lines["23"], col_lines["34"] = calibrate_col_bounds(final_apriltag_results, black_color = False)
+
+	mid_p_m = (col_lines["67"][0] + col_lines["23"][0])/2
+	mid_p_b = (col_lines["67"][1] + col_lines["23"][1])/2
+	
+	add_polyfit_lines_col(col_lines["67"][0], col_lines["67"][1])
+	add_polyfit_lines_col(col_lines["23"][0], col_lines["23"][1])
+	
+	col_lines["45"] = avg_polyfit_line(col_lines["67"][0], col_lines["67"][1], col_lines["23"][0], col_lines["23"][1])
+	col_lines["56"] = avg_polyfit_line(col_lines["67"][0], col_lines["67"][1], col_lines["45"][0], col_lines["45"][1])
+	col_lines["34"] = avg_polyfit_line(col_lines["45"][0], col_lines["45"][1], col_lines["23"][0], col_lines["23"][1])
+
+	return col_lines
+
 def add_polyfit_lines(m, b, boundary_x, boundary_y):
 				
-	img = cv2.imread("/home/chess/Documents/check-SW/image.jpg")
+	img = cv2.imread(IMG_PATH)
 	num_pixels_y = img.shape[1]
 	
 	x1, y1 = 0, int(b)
@@ -121,17 +127,17 @@ def add_polyfit_lines(m, b, boundary_x, boundary_y):
 	for i in range(len(boundary_x)):
 		cv2.circle(img, (int(boundary_x[i]), int(boundary_y[i])), 10, (0, 0, 255), -1)
 	
-	cv2.imwrite("/home/chess/Documents/check-SW/image.jpg", img)
+	cv2.imwrite(IMG_PATH, img)
 	
 def add_polyfit_lines_col(m, b):
 				
-	img = cv2.imread("/home/chess/Documents/check-SW/image.jpg")
+	img = cv2.imread(IMG_PATH)
 	num_pixels_y = img.shape[1]
 	x1, y1 = 0, int(b)
 	x2, y2 = num_pixels_y, int(m * num_pixels_y + b)
 	cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0) ,5)
 	
-	cv2.imwrite("/home/chess/Documents/check-SW/image.jpg", img)
+	cv2.imwrite(IMG_PATH, img)
 	
 def avg_polyfit_line(m_max, b_max, m_min, b_min):
 	#TODO: 2592 = image size, remove hard coded value
@@ -165,29 +171,17 @@ if __name__ == "__main__":
 	for i in range(1):
 		img = take_image(camera)
 		results = detect_apriltags(img)
-		print(len(results))
 		if len(results) > num_tags:
 			num_tags = len(results)
 			final_apriltag_results = results
 			
 	print(f"Number Tags: {num_tags}")
-	#for tag in final_apriltag_results:
-	#	print(f"April Tag ID: {tag.tag_id}, Center: {tag.center}, Corners: {tag.corners}")	
+	# for tag in final_apriltag_results:
+	# 	print(f"April Tag ID: {tag.tag_id} ") #, Center: {tag.center}, Corners: {tag.corners}")	
 	
-	black = True
-	white = False
-	m_78, b_78, m_67, b_67 = calibrate_board_columns(final_apriltag_results, black)
-	m_23, b_23, m_34, b_34 = calibrate_board_columns(final_apriltag_results, white)
-	
-	mid_p_m = (m_67 + m_23)/2
-	mid_p_b = (b_67 + b_23)/2
-	
-	add_polyfit_lines_col(m_67, b_67)
-	add_polyfit_lines_col(m_23, b_23)
-	
-	m_45, b_45 = avg_polyfit_line(m_67, b_67, m_23, b_23)
-	m_56, b_56 = avg_polyfit_line(m_67, b_67, m_45, b_45)
-	m_34, b_34 = avg_polyfit_line(m_45, b_45, m_23, b_23)
+	col_lines = return_col_lines(final_apriltag_results)
+	print(col_lines)
+
 
 	
 	camera.close()
