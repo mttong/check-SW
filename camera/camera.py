@@ -99,30 +99,40 @@ def calibrate_col_bounds(results, black_color = True):
 	pawn_m_min, pawn_b_min = np.polyfit(min_pawn[0], min_pawn[1],1)
 	pawn_m_max, pawn_b_max = np.polyfit(max_pawn[0], max_pawn[1],1)
 	
-	add_polyfit_lines(m_min, b_min, min_boundary[0], min_boundary[1])
-	add_polyfit_lines(m_max, b_max, max_boundary[0], max_boundary[1])
+	# add_polyfit_lines(m_min, b_min, min_boundary[0], min_boundary[1])
+	# add_polyfit_lines(m_max, b_max, max_boundary[0], max_boundary[1])
+	# add_polyfit_lines(pawn_m_min, pawn_b_min, min_pawn[0], min_pawn[1])
+	# add_polyfit_lines(pawn_m_max, pawn_b_max, max_pawn[0], max_pawn[1])
 
 	board_boundary_min = [m_min, b_min]
 	board_boundary_max = [m_max, b_max]
 	
 	return [pawn_m_min, pawn_b_min], [pawn_m_max, pawn_b_max], board_boundary_min, board_boundary_max
-	
+
+def shift_polyfit_x(polyfit_line, shift):
+	polyfit_line[1] = polyfit_line[1] - (polyfit_line[0] * shift)
+	return polyfit_line
 			
 def return_col_lines(final_apriltag_results):
 	#each line defined by m and b
 	col_lines = {}
-	col_lines["78"], col_lines["67"], board_boundary_min_79, board_boundary_max_78 = calibrate_col_bounds(final_apriltag_results, black_color = True)
-	col_lines["23"], col_lines["34"], board_boundary_min_23, board_boundary_max_12 = calibrate_col_bounds(final_apriltag_results, black_color = False)
+	min_78, col_lines["67"], boundary_89, max_78 = calibrate_col_bounds(final_apriltag_results, black_color = True)
+	col_lines["23"], min_12, max_12, boundary_01 = calibrate_col_bounds(final_apriltag_results, black_color = False)
 
-	#mid_p_m = (col_lines["67"][0] + col_lines["23"][0])/2
-	#mid_p_b = (col_lines["67"][1] + col_lines["23"][1])/2
-	
-	add_polyfit_lines_col(col_lines["67"][0], col_lines["67"][1])
-	add_polyfit_lines_col(col_lines["23"][0], col_lines["23"][1])
-	
-	col_lines["45"] = avg_polyfit_line(col_lines["67"][0], col_lines["67"][1], col_lines["23"][0], col_lines["23"][1])
-	col_lines["56"] = avg_polyfit_line(col_lines["67"][0], col_lines["67"][1], col_lines["45"][0], col_lines["45"][1])
-	col_lines["34"] = avg_polyfit_line(col_lines["45"][0], col_lines["45"][1], col_lines["23"][0], col_lines["23"][1])
+	#shift boundary line next to column 1 30 pixels to the right
+	col_lines["01"] = shift_polyfit_x(boundary_01, 30)
+	#shift boundary line next to column 8 to the left by 30 pixels
+	col_lines["89"] = shift_polyfit_x(boundary_89, -30)
+
+	col_lines["12"] = avg_x_polyfit_line(min_12[0], min_12[1], max_12[0], max_12[1])
+	col_lines["78"] = avg_x_polyfit_line(min_78[0], min_78[1], max_78[0], max_78[1])
+
+	col_lines["23"] = shift_polyfit_x([col_lines["23"][0], col_lines["23"][1]], -20)
+	col_lines["67"] = shift_polyfit_x([col_lines["67"][0], col_lines["67"][1]], 20)
+
+	col_lines["45"] = avg_x_polyfit_line(col_lines["67"][0], col_lines["67"][1], col_lines["23"][0], col_lines["23"][1])
+	col_lines["56"] = avg_x_polyfit_line(col_lines["67"][0], col_lines["67"][1], col_lines["45"][0], col_lines["45"][1])
+	col_lines["34"] = avg_x_polyfit_line(col_lines["45"][0], col_lines["45"][1], col_lines["23"][0], col_lines["23"][1])
 
 	return col_lines
 
@@ -140,8 +150,6 @@ def return_min_max_line_rows(results):
 
 	min_corner_y_value = 1944.0 #size of the image
 	max_corner_y_value = 0.0
-
-
 
 	for tag in results:
 		min_corner_y = min_corner_y_value
@@ -164,34 +172,67 @@ def return_min_max_line_rows(results):
 	m_min, b_min = np.polyfit(min_boundary[0], min_boundary[1],1)
 	m_max, b_max = np.polyfit(max_boundary[0], max_boundary[1],1)
 
-	add_polyfit_lines(m_min, b_min, min_boundary[0], min_boundary[1])
-	add_polyfit_lines(m_max, b_max, max_boundary[0], max_boundary[1])
+	min_line = [m_min, b_min]
+	max_line = [m_max, b_max]
 
+	return (min_line, max_line)
 
 def return_row_lines(april_tag_results):
 	row_lines = {}
 	sorted_rows = {}
 	rows = {}
-	for i in range(2, 10):
+	for i in range(2, 14):
 		sorted_rows[i] = sort_row_tags(april_tag_results, i)
 
-	print(sorted_rows)
+	row_letters = 'HGFEDCBA'
 
-	max_black_rook = sorted(sorted_rows[4], key=lambda tag: tag.center[1])[1]
-	max_white_rook = sorted(sorted_rows[5], key=lambda tag: tag.center[1])[1]
 	min_black_rook = sorted(sorted_rows[4], key=lambda tag: tag.center[1])[0]
+	max_black_rook = sorted(sorted_rows[4], key=lambda tag: tag.center[1])[1]
 	min_white_rook = sorted(sorted_rows[5], key=lambda tag: tag.center[1])[0]
-	rows['A'] = [max_black_rook, max_white_rook]
-	rows['H'] = [min_black_rook, min_white_rook, sorted(sorted_rows[2], key=lambda tag: tag.center[1])[0], sorted(sorted_rows[3], key=lambda tag: tag.center[1])[0]]
+	max_white_rook = sorted(sorted_rows[5], key=lambda tag: tag.center[1])[1]
 
-	return_min_max_line_rows(rows['H'])
+	min_black_bishop = sorted(sorted_rows[6], key=lambda tag: tag.center[1])[0]
+	max_black_bishop = sorted(sorted_rows[6], key=lambda tag: tag.center[1])[1]
+	min_white_bishop = sorted(sorted_rows[7], key=lambda tag: tag.center[1])[0]
+	max_white_bishop = sorted(sorted_rows[7], key=lambda tag: tag.center[1])[1]
+
+	min_black_knight = sorted(sorted_rows[8], key=lambda tag: tag.center[1])[0]
+	max_black_knight = sorted(sorted_rows[8], key=lambda tag: tag.center[1])[1]
+	min_white_knight = sorted(sorted_rows[9], key=lambda tag: tag.center[1])[0]
+	max_white_knight = sorted(sorted_rows[9], key=lambda tag: tag.center[1])[1]
+
+	min_black_queen = sorted(sorted_rows[10], key=lambda tag: tag.center[1])[0]
+	min_white_queen = sorted(sorted_rows[11], key=lambda tag: tag.center[1])[0]
+	min_black_king = sorted(sorted_rows[12], key=lambda tag: tag.center[1])[0]
+	min_white_king = sorted(sorted_rows[13], key=lambda tag: tag.center[1])[0]
+
+	rows['A'] = [max_black_rook, max_white_rook]
+	rows['B'] = [max_black_knight, max_white_knight]
+	rows['C'] = [max_black_bishop, max_white_bishop]
+	rows['D'] = [min_black_queen, min_white_queen]
+	rows['E'] = [min_black_king, min_white_king]
+	rows['F'] = [min_black_bishop, min_white_bishop]
+	rows['G'] = [min_black_knight, min_white_knight]
+	rows['H'] = [min_black_rook, min_white_rook]
+	for i in range(8):
+		rows[row_letters[i]].append(sorted(sorted_rows[2], key=lambda tag: tag.center[1])[i])
+		rows[row_letters[i]].append(sorted(sorted_rows[3], key=lambda tag: tag.center[1])[i])
+
+####START EDITING HERE
+		min_line, max_line = return_min_max_line_rows(rows[row_letters[i]])
+
+	print("row lines", row_lines)
+	AB_line = avg_y_polyfit_line(row_lines[0], row_lines[1])
+	add_polyfit_lines(AB_line)
+
+	
 	#for letter in rows:
 		#get_row_tags(april_tag_results, letter)
 
 	return row_lines
 
 
-def add_polyfit_lines(m, b, boundary_x, boundary_y):
+def add_polyfit_lines_circle(m, b, boundary_x, boundary_y):
 				
 	img = cv2.imread(IMG_PATH)
 	num_pixels_y = img.shape[1]
@@ -204,7 +245,9 @@ def add_polyfit_lines(m, b, boundary_x, boundary_y):
 	
 	cv2.imwrite(IMG_PATH, img)
 	
-def add_polyfit_lines_col(m, b):
+def add_polyfit_lines(polyfit_line):
+	m = polyfit_line[0]
+	b = polyfit_line[1]
 				
 	img = cv2.imread(IMG_PATH)
 	num_pixels_y = img.shape[1]
@@ -214,7 +257,7 @@ def add_polyfit_lines_col(m, b):
 	
 	cv2.imwrite(IMG_PATH, img)
 	
-def avg_polyfit_line(m_max, b_max, m_min, b_min):
+def avg_x_polyfit_line(m_max, b_max, m_min, b_min):
 	#TODO: 2592 = image size, remove hard coded value
 	y_values = np.arange(2592)
     
@@ -228,7 +271,28 @@ def avg_polyfit_line(m_max, b_max, m_min, b_min):
     # Fit new line through (avg_x, y_values) points
 	valid = np.isfinite(avg_x)
 	m_avg, b_avg = np.polyfit(avg_x[valid], y_values[valid], 1)
-	add_polyfit_lines_col(m_avg, b_avg)
+	# add_polyfit_lines([m_avg, b_avg])
+	return m_avg, b_avg
+
+def avg_y_polyfit_line(max_line, min_line):
+	m_max = max_line[0]
+	b_max = max_line[1]
+	m_min = min_line[0]
+	b_min= min_line[1]
+	#TODO: 1944 = image size, remove hard coded value
+	x_values = np.arange(1944)
+    
+    # Calculate x-values for both lines at each y
+	max_y = m_max * x_values + b_max
+	min_y = m_min * x_values + b_min
+    
+    # Average the x-values at each y-coordinate
+	avg_y = (max_y + min_y) / 2
+    
+    # Fit new line through (avg_x, y_values) points
+	valid = np.isfinite(avg_y)
+	m_avg, b_avg = np.polyfit(x_values[valid], avg_y[valid], 1)
+	# add_polyfit_lines([m_avg, b_avg])
 	return m_avg, b_avg
 	
 if __name__ == "__main__":
@@ -255,7 +319,9 @@ if __name__ == "__main__":
 	# 	print(f"April Tag ID: {tag.tag_id} , Center: {tag.center} ") #, Corners: {tag.corners}")	
 	
 	col_lines = return_col_lines(final_apriltag_results)
-	print(col_lines)
+	for line_num, line_value  in col_lines.items():
+		add_polyfit_lines(line_value)
+
 	print(return_row_lines(final_apriltag_results))
 
 	
