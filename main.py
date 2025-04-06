@@ -2,6 +2,7 @@ import time
 from audio.listener import Listener
 # from test_frame import Picture
 from engine.engine import Engine
+from engine.piece_keeper import PieceKeeper
 from motor.gantry_serial import Gantry
 #import motor.constants as constants
 from motor import constants
@@ -17,6 +18,7 @@ def main():
     listener = Listener()
     # picture = Picture()
     engine = Engine(black_playing=True, white_playing=True)
+    keeper = PieceKeeper()
     lcd_display = LCD()
     gantry = Gantry()
     
@@ -31,7 +33,7 @@ def main():
 
     turn = False
     
-    #lcd_display.display_ip_address()
+    lcd_display.display_default_images()
     #lcd_display.run()
 
     # Capture and detect AprilTag
@@ -42,54 +44,68 @@ def main():
     while True:
         # Get coordinates
         print("Getting coordinates")
-        from_coord, to_coord = listener.get_coordinate_input()
+        
+        # manual input for testing
+        from_coord = input()
+        to_coord = input()
+        
+        
+        # from_coord, to_coord = listener.get_coordinate_input()
         print("Coordinates:", from_coord, to_coord) # A2 A4
         
-        start_x, start_y, start_z = gantry.chess_to_mm(from_coord, "k")
-        end_x, end_y, end_z = gantry.chess_to_mm(to_coord, "k")
-        
-        gantry.cmd_move_xyz(start_x, start_y, 0)
-        
-        while gantry.cmd_is_moving(constants.GANTRY):
-            time.sleep(0.1)
-            
-        gantry.cmd_move_xyz(start_x, start_y, start_z)
-        
-        while gantry.cmd_is_moving(constants.GANTRY):
-            time.sleep(0.1)
-            
-        gantry.cmd_enable_mag(True)
-        input()
-        
-        gantry.cmd_move_xyz(start_x, start_y, 100)
-        
-        while gantry.cmd_is_moving(constants.GANTRY):
-            time.sleep(0.1)
-        
-        gantry.cmd_move_xyz(end_x, end_y, 100)
-        
-        while gantry.cmd_is_moving(constants.GANTRY):
-            time.sleep(0.1)
-            
-        gantry.cmd_move_xyz(end_x, end_y, start_z)
-        
-        while gantry.cmd_is_moving(constants.GANTRY):
-            time.sleep(0.1)
-            
-        gantry.cmd_enable_mag(False)
-        
-        input()
-
         # Call the chess engine HERE!!!
         # odd turns be black
         if not turn:
+            lcd_display.display_turn_white()
             engine.move_white(from_coord.lower() + to_coord.lower())
         else:
+            lcd_display.display_turn_black()
             engine.move_black(from_coord.lower() + to_coord.lower())
 
         engine.print_board()
 
         turn = not turn
+        
+        for from_coord, to_coord in keeper.move(from_coord, to_coord):
+            
+            from_coord = from_coord.upper()
+            to_coord = to_coord.upper()
+        
+            start_x, start_y, start_z = gantry.chess_to_mm(from_coord, "k")
+            end_x, end_y, end_z = gantry.chess_to_mm(to_coord, "k")
+            
+            gantry.cmd_move_xyz(start_x, start_y, 0)
+            
+            while gantry.cmd_is_moving(constants.GANTRY):
+                time.sleep(0.1)
+                
+            gantry.cmd_move_xyz(start_x, start_y, start_z)
+            
+            while gantry.cmd_is_moving(constants.GANTRY):
+                time.sleep(0.1)
+                
+            gantry.cmd_enable_mag(True)
+            input()
+            
+            gantry.cmd_move_xyz(start_x, start_y, 100)
+            
+            while gantry.cmd_is_moving(constants.GANTRY):
+                time.sleep(0.1)
+            
+            gantry.cmd_move_xyz(end_x, end_y, 100)
+            
+            while gantry.cmd_is_moving(constants.GANTRY):
+                time.sleep(0.1)
+                
+            gantry.cmd_move_xyz(end_x, end_y, start_z)
+            
+            while gantry.cmd_is_moving(constants.GANTRY):
+                time.sleep(0.1)
+                
+            gantry.cmd_enable_mag(False)
+            
+            input()
+
 
     # send the coordinates to the motor and move the piece accordingly
 

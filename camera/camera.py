@@ -6,7 +6,7 @@ import pupil_apriltags as apriltag
 import numpy as np
 #import apriltag
 
-IMG_PATH = "/home/chess/Check/official-branch/camera/img.jpg"
+IMG_PATH = "/home/chess/Check_official/check-SW/camera/img.jpg"
 
 CHESS_PIECES = {
 	'black_pawn': 2,
@@ -214,20 +214,25 @@ def return_row_lines(april_tag_results):
 	rows['F'] = [min_black_bishop, min_white_bishop]
 	rows['G'] = [min_black_knight, min_white_knight]
 	rows['H'] = [min_black_rook, min_white_rook]
+
+	rows_min_max = {}
 	for i in range(8):
 		rows[row_letters[i]].append(sorted(sorted_rows[2], key=lambda tag: tag.center[1])[i])
 		rows[row_letters[i]].append(sorted(sorted_rows[3], key=lambda tag: tag.center[1])[i])
 
-####START EDITING HERE
 		min_line, max_line = return_min_max_line_rows(rows[row_letters[i]])
+		rows_min_max[row_letters[i]] = min_line, max_line
 
-	print("row lines", row_lines)
-	AB_line = avg_y_polyfit_line(row_lines[0], row_lines[1])
-	add_polyfit_lines(AB_line)
+	#shift H min Row up
+	row_lines['HI'] = [rows_min_max['H'][0][0], rows_min_max['H'][0][1] + -30]
+	#shift A max row down
+	row_lines['LA'] = [rows_min_max['A'][1][0], rows_min_max['A'][1][1] + 30]
+	#row_lines['HI'] = [rows_min_max['H'][0][0], rows_min_max['H'][0][1] + -50]
 
-	
-	#for letter in rows:
-		#get_row_tags(april_tag_results, letter)
+	for i in range(1,8):
+		print(rows_min_max[row_letters[i-1]], rows_min_max[row_letters[i]])
+		row_lines[row_letters[i]+row_letters[i-1]] = avg_y_polyfit_line(rows_min_max[row_letters[i-1]][1], rows_min_max[row_letters[i]][0])
+		#add_polyfit_lines(row_lines[row_letters[i] + row_letters[i-1]])
 
 	return row_lines
 
@@ -319,10 +324,11 @@ if __name__ == "__main__":
 	# 	print(f"April Tag ID: {tag.tag_id} , Center: {tag.center} ") #, Corners: {tag.corners}")	
 	
 	col_lines = return_col_lines(final_apriltag_results)
-	for line_num, line_value  in col_lines.items():
+	for line_num, line_value in col_lines.items():
 		add_polyfit_lines(line_value)
 
-	print(return_row_lines(final_apriltag_results))
-
+	row_lines_results = return_row_lines(final_apriltag_results)
+	for line_letter, line_value in row_lines_results.items():
+		add_polyfit_lines(line_value)
 	
 	camera.close()
