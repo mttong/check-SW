@@ -7,6 +7,7 @@ import numpy as np
 #import apriltag
 
 IMG_PATH = "/home/chess/Check_official/check-SW/camera/img.jpg"
+APRILTAG2 = "/home/chess/Check_official/check-SW/camera/apriltag2.jpg"
 
 CHESS_PIECES = {
 	'black_pawn': 2,
@@ -30,7 +31,6 @@ def take_image(camera):
 	return img
 	
 def detect_apriltags(img, brightness = 0.75):
-	
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	gray = (gray*brightness).astype(np.uint8)
 
@@ -227,15 +227,17 @@ def return_row_lines(april_tag_results):
 	row_lines['HI'] = [rows_min_max['H'][0][0], rows_min_max['H'][0][1] + -30]
 	#shift A max row down
 	row_lines['LA'] = [rows_min_max['A'][1][0], rows_min_max['A'][1][1] + 30]
-	#row_lines['HI'] = [rows_min_max['H'][0][0], rows_min_max['H'][0][1] + -50]
+	
+	#shift H min Row up
+	row_lines['IJ'] = [row_lines['HI'][0], row_lines['HI'][1] + -130]
+	#shift A max row down
+	row_lines['KL'] = [row_lines['LA'][0], row_lines['LA'][1] + 270]
 
+	#average min and max row lines
 	for i in range(1,8):
-		print(rows_min_max[row_letters[i-1]], rows_min_max[row_letters[i]])
 		row_lines[row_letters[i]+row_letters[i-1]] = avg_y_polyfit_line(rows_min_max[row_letters[i-1]][1], rows_min_max[row_letters[i]][0])
-		#add_polyfit_lines(row_lines[row_letters[i] + row_letters[i-1]])
 
 	return row_lines
-
 
 def add_polyfit_lines_circle(m, b, boundary_x, boundary_y):
 				
@@ -300,6 +302,16 @@ def avg_y_polyfit_line(max_line, min_line):
 	# add_polyfit_lines([m_avg, b_avg])
 	return m_avg, b_avg
 	
+def add_circles(img_path, boundary_x, boundary_y):
+				
+	img = cv2.imread(APRILTAG2)
+	
+	for i in range(len(boundary_x)):
+		cv2.circle(img, (int(boundary_x[i]), int(boundary_y[i])), 10, (0, 0, 255), -1)
+	
+	cv2.imwrite(APRILTAG2, img)
+
+
 if __name__ == "__main__":
 	camera = Picamera2()
 
@@ -320,8 +332,8 @@ if __name__ == "__main__":
 			final_apriltag_results = results
 	
 	print(f"Number Tags: {num_tags}")
-	#for tag in final_apriltag_results:
-	# 	print(f"April Tag ID: {tag.tag_id} , Center: {tag.center} ") #, Corners: {tag.corners}")	
+	for tag in final_apriltag_results:
+		print(f"April Tag ID: {tag.tag_id} , Center: {tag.center} ") #, Corners: {tag.corners}")	
 	
 	col_lines = return_col_lines(final_apriltag_results)
 	for line_num, line_value in col_lines.items():
@@ -331,4 +343,29 @@ if __name__ == "__main__":
 	for line_letter, line_value in row_lines_results.items():
 		add_polyfit_lines(line_value)
 	
+	input()
+
+	img1 = take_image(camera)
+	results1 = detect_apriltags(img1)
+	print(results1)
+	for tag in results1:
+		#cv2.circle(img, (int(tag.center[0]), int(tag.center[1]), 10, (0, 0, 255), -1))
+		cv2.circle(img1, (int(tag.center[0]), int(tag.center[1])), 10, (0, 0, 255), -1)
+		#cv2.circle(img, (int(boundary_x[i]), int(boundary_y[i])), 10, (0, 0, 255), -1)
+
+	cv2.imwrite(IMG_PATH, img1)
+
+	for line_num, line_value in col_lines.items():
+		add_polyfit_lines(line_value)
+
+	for line_letter, line_value in row_lines_results.items():
+		add_polyfit_lines(line_value)
+		
+
+		
+
+	
+
+	print("end")
+
 	camera.close()
