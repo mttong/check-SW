@@ -256,7 +256,7 @@ class Gantry:
         if ret:
             raise GantryError(ret)
             
-    def chess_to_mm(self, coord:str, piece:str):
+    def chess_to_mm(self, coord:str, piece:str) -> tuple[str, str, str]:
         letter = coord[0]
         number = int(coord[1])
         

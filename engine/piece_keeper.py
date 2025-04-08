@@ -64,9 +64,9 @@ class PieceKeeper:
 			self.pieces[to_coord] = from_piece
 			discard_move = self._get_discard(to_piece[0] == 'w')
 			self.pieces[discard_move] = to_piece
-			return_move.append([to_coord, discard_move])
+			return_move.append([[to_coord, discard_move], to_piece[1]])
 		
-		return_move.append([from_coord, to_coord])
+		return_move.append([[from_coord, to_coord], from_piece[1]])
 		self.pieces[to_coord] = from_piece
 		
 		return return_move

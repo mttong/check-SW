@@ -66,45 +66,54 @@ def main():
 
         turn = not turn
         
-        for from_coord, to_coord in keeper.move(from_coord, to_coord):
-            
+        for (from_coord, to_coord), piece in keeper.move(from_coord, to_coord):
+            # Convert chess coordinates to mm coordinates
             from_coord = from_coord.upper()
             to_coord = to_coord.upper()
-        
-            start_x, start_y, start_z = gantry.chess_to_mm(from_coord, "k")
-            end_x, end_y, end_z = gantry.chess_to_mm(to_coord, "k")
+            pick_x, pick_y, pick_z = gantry.chess_to_mm(from_coord, piece)
+            place_x, place_y, place_z = gantry.chess_to_mm(to_coord, piece)
             
-            gantry.cmd_move_xyz(start_x, start_y, 0)
-            
+            # Move above pick coordinate
+            gantry.cmd_move_xyz(pick_x, pick_y, constants.SAFE_HEIGHT)
             while gantry.cmd_is_moving(constants.GANTRY):
                 time.sleep(0.1)
-                
-            gantry.cmd_move_xyz(start_x, start_y, start_z)
             
+            # Descent to pick position
+            gantry.cmd_move_xyz(pick_x, pick_y, pick_z)
             while gantry.cmd_is_moving(constants.GANTRY):
                 time.sleep(0.1)
-                
+            
+            # Enable the electromagnet
+            time.sleep(0.1)
             gantry.cmd_enable_mag(True)
-            input()
+            time.sleep(0.4)
+            # input() # Added if electromagnet done manually with power supply
             
-            gantry.cmd_move_xyz(start_x, start_y, 100)
-            
+            # Move straight up with the piece held
+            gantry.cmd_move_xyz(pick_x, pick_y, constants.SAFE_HEIGHT)
             while gantry.cmd_is_moving(constants.GANTRY):
                 time.sleep(0.1)
             
-            gantry.cmd_move_xyz(end_x, end_y, 100)
-            
+            # Move above place location
+            gantry.cmd_move_xyz(place_x, place_y, constants.SAFE_HEIGHT)
             while gantry.cmd_is_moving(constants.GANTRY):
                 time.sleep(0.1)
-                
-            gantry.cmd_move_xyz(end_x, end_y, start_z)
             
+            # Descend down to place the piece
+            gantry.cmd_move_xyz(place_x, place_y, place_z)
             while gantry.cmd_is_moving(constants.GANTRY):
                 time.sleep(0.1)
-                
+            
+            # Disable the electromagnet to let go
+            time.sleep(0.1)
             gantry.cmd_enable_mag(False)
+            time.sleep(0.5)
+            # input() # Added if electromagnet done manually with power supply
             
-            input()
+            # Move up to the safe height to prepare for the next move command
+            gantry.cmd_move_xyz(place_x, place_y, constants.SAFE_HEIGHT)
+            while gantry.cmd_is_moving(constants.GANTRY):
+                time.sleep(0.1)
 
 
     # send the coordinates to the motor and move the piece accordingly
